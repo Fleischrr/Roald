@@ -17,7 +17,7 @@ def row_mean(row):
 
 
 # Returns a dataframe after pre-processing the dataset
-def data_preperation():
+def data_preparation():
          
     # Load the dataset from CSV with the expected column datatypes
     data_frame = pd.read_csv(path_to_dataset)
@@ -40,7 +40,7 @@ def data_preperation():
 
 
 def main():
-    data_frame = data_preperation()
+    data_frame = data_preparation()
     
     print(data_frame.info())    
     #print(data_frame.head())
