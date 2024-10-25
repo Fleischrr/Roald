@@ -8,7 +8,6 @@ Column #4 displays `Dtype` as an `object` and not `float64` as expected.
 ---
 **Lets force every column to its expected `float64` type and replace each non-numeric value with an `NaN`:**
 ```Python
-[...]
 numeric_columns = ["0rep1", "0rep2", "0rep3", "0.5yrep1", "0.5yrep2", "0.5yrep3"]
 
 for column in numeric_columns:
@@ -24,7 +23,6 @@ Showing us that is successfully replaced 1 incorrect value to an `NaN`, as we on
 ---
 **Fill incorrect `NaN` values with the mean of the row where the `NaN` exists (`0y` and `0.5y` seperated):**
 ```Python
-[...]
 rep0_df = data_frame[["0rep1", "0rep2", "0rep3"]].apply(row_mean, axis=1)
 rep05_df = data_frame[["0.5yrep1", "0.5yrep2", "0.5yrep3"]].apply(row_mean, axis=1)
 
