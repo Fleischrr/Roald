@@ -10,4 +10,4 @@ First measurement is a base-line sample from sedentary university students. The 
 ---
 
 ## Documentation
-[Data Preparation](documentation.md#data-preparation)
+- [Data Preparation](documentation.md#data-preparation)
