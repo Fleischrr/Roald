@@ -52,11 +52,37 @@ def dataPreparation():
     return mirna_df
 
 
+# Apply Isolation Forest to detect deregulated miRNAs
+def applyIsolationForest(mirna_df):
+    isolation_forest = IsolationForest(n_estimators=100, 
+                                       contamination=0.05, 
+                                       random_state=24)
+    
+    mirna_df['anomaly_score'] = isolation_forest.fit_predict(mirna_df)
+
+
+# Replace the index with the species name
+def replaceIndexWithName(sorted_mirna_df):
+    sorted_mirna_df.index.name = 'miRNA_species'
+    
+    return sorted_mirna_df.reset_index()
+
+
 def main():
     
     # Retrieve the data prepared dataset
     mirna_data_frame = dataPreparation()
     
+    # Apply Isolation Forest to detect deregulated miRNAs
+    applyIsolationForest(mirna_data_frame)
+
+    # Sort by percent changed and filter out the normal values
+    sorted_mirna_df = mirna_data_frame.sort_values(by='percent_change', key=abs, ascending=False)
+    anon_mirna_df = sorted_mirna_df[sorted_mirna_df['anomaly_score'] == -1]
+    
+    # Replace the index with the species name
+    anon_mirna_df = replaceIndexWithName(anon_mirna_df)
+    print(anon_mirna_df)
 
 if __name__ == "__main__":
     main()
