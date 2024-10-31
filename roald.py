@@ -2,14 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
+from sklearn.ensemble import IsolationForest
 
 # Global variables
 dataset_file_path = "raw_mirna_data.csv"
 
 
 # Calculate the mean of a row and fill the NaN values with the mean
-def RowMean(row):
+def rowMean(row):
     mean = row.mean()
     
     # Throw an error if the mean of the row is NaN
@@ -32,8 +32,8 @@ def dataPreparation():
         initial_mirna_df[column] = pd.to_numeric(initial_mirna_df[column], errors='coerce')
 
     # Fill any NaN values with the mean of that row. For 0 year and 0.5 year separately
-    year0_df = initial_mirna_df[["0rep1", "0rep2", "0rep3"]].apply(RowMean, axis=1)
-    year05_df = initial_mirna_df[["0.5yrep1", "0.5yrep2", "0.5yrep3"]].apply(RowMean, axis=1)
+    year0_df = initial_mirna_df[["0rep1", "0rep2", "0rep3"]].apply(rowMean, axis=1)
+    year05_df = initial_mirna_df[["0.5yrep1", "0.5yrep2", "0.5yrep3"]].apply(rowMean, axis=1)
 
     # Calculate the mean of each measurement for 0 year and 0.5 year, and add them to a new dataframe
     year0_mean = year0_df.mean(axis=1)
@@ -42,49 +42,82 @@ def dataPreparation():
     
     # Feature engineer our dataset by creating new features to enhance the variance
     mean_mirna_df['difference'] = mean_mirna_df['0.5_year'] - mean_mirna_df['0_year']
-    mean_mirna_df['ratio'] = mean_mirna_df['0.5_year'] / mean_mirna_df['0_year']
     mean_mirna_df['percent_change'] = (mean_mirna_df['0.5_year'] - mean_mirna_df['0_year']) / mean_mirna_df['0_year'] * 100
 
     # Scale the processed mean-dataframe and convert it into the prepared dataframe
     scaler = StandardScaler()
     scaled_array = scaler.fit_transform(mean_mirna_df)
-    mirna_df = pd.DataFrame(scaled_array, columns=mean_mirna_df.columns, index=mean_mirna_df.index)
+    mirna_df = pd.DataFrame(scaled_array, columns=mean_mirna_df.columns, index=initial_mirna_df['species'])
 
     return mirna_df
 
 
-def findClustersElbow(mirna_df):
+# Apply Isolation Forest to detect deregulated miRNAs
+def applyIsolationForest(mirna_df):
+    isolation_forest = IsolationForest(n_estimators=100, 
+                                       contamination=0.05, 
+                                       random_state=24)
     
-    # Initialize wcss-list and define the range of clusters
-    wcss = []
-    range_clusters = range(1, 11)
+    mirna_df['anomaly_score'] = isolation_forest.fit_predict(mirna_df)
+
+
+# Replace the index with the species name
+def replaceIndexWithName(sorted_mirna_df):
+    sorted_mirna_df.index.name = 'miRNA_species'
     
-    # Calculate the wcss for each cluster-count in the defined range
-    for n in range_clusters:
-        k_means = KMeans(n_clusters=n, init='k-means++', random_state=24)
-        k_means.fit(mirna_df)
-        wcss.append(k_means.inertia_)
-        
-    # Plot the elbow graph
-    plt.plot(range_clusters, wcss, marker='o', linestyle='-', color='g')
-    plt.title('Elbow Graph')
-    plt.xlabel('Number of Clusters (n)')
-    plt.ylabel('WCSS Value')
-    plt.grid(True)
+    return sorted_mirna_df.reset_index()
+
+def evaluateModel(mirna_df):
+    
+    # Set the contamination rate used in the Isolation Forest model
+    containment_rate = 0.05
+    
+    # Calculate the distribution of anomalies and normal data, between expected and actual
+    total_count = len(mirna_df)
+    expected_anomalies = total_count * containment_rate
+    anomaly_count = len(mirna_df[mirna_df['anomaly_score'] == -1])
+    normal_count = total_count - anomaly_count
+
+    print(f"\nTotal Data Points: {total_count}")
+    print(f"Number of Normal Points: {normal_count}")
+    print(f"Number of Anomalies: {anomaly_count}")
+    print(f"Percentage of Anomalies (Contamination): {anomaly_count / total_count * 100:.2f}%")
+    print(f"Expected Number of Anomalies: {expected_anomalies:.0f}")
+    print(f"Expected Contamination Rate: {containment_rate:.2%}")
+    
+    # Visualize the anomalies vs normal data using a scatter plot
+    mirna_df.reset_index(inplace=True)
+    plt.scatter(mirna_df.index, mirna_df['percent_change'], c=mirna_df['anomaly_score'],
+                cmap='coolwarm', label='Anomaly Score', alpha=0.6)
+    plt.xlabel('miRNA Index')
+    plt.ylabel('Percent Change')
+    plt.title('Isolation Forest Anomaly Detection')
+    plt.axhline(0, color='black', linestyle='--')
+    plt.colorbar(label='Anomaly Score (-1=Anomaly, 1=Normal)')
     plt.show()
 
 
 def main():
     
-    # Retrieve the pre-processed dataframe
+    # Retrieve the data prepared dataset
     mirna_data_frame = dataPreparation()
     
-    # Analyze the elbow graph to find the optimal number of clusters
-    findClustersElbow(mirna_data_frame)
-    
-    # Set the optimal number of clusters based on the elbow graph analysis
-    n_clusters = 3
+    # Apply Isolation Forest to detect deregulated miRNAs
+    applyIsolationForest(mirna_data_frame)
 
+    # Sort by percent changed and filter out the normal values
+    sorted_mirna_df = mirna_data_frame.sort_values(by='percent_change', 
+                                                   key=abs, 
+                                                   ascending=False)
+    anon_mirna_df = sorted_mirna_df[sorted_mirna_df['anomaly_score'] == -1]
+    
+    # Replace the index with the species name
+    anon_mirna_df = replaceIndexWithName(anon_mirna_df)
+    print(anon_mirna_df)
+
+    # Evaluate the model
+    evaluateModel(mirna_data_frame)
+    
 
 if __name__ == "__main__":
     main()
