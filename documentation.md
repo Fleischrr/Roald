@@ -112,6 +112,6 @@ mean_mirna_df['percent_change'] = (mean_mirna_df['0.5_year'] - mean_mirna_df['0_
 \
 ![](attachments/elbow_attempt_2.png)
 \
-This is a much better looking `Elbow Graph` than we had in **Attempt #1**. Here we can clearly see an elbow-looking graph, with the *elbow-point* at `n=3`. Since after `n=3` the graph slows down and looses its curve and almost decreases linearly for the rest of the cluster-counts, the *elbow-point* and optimal number of cluesters is `n=3`.
+This is a much better looking `Elbow Graph` than we had in **Attempt #1**. Here we can clearly see an elbow-looking graph, with the *elbow-point* at `n=3`. Since after `n=3` the graph slows down and looses its curve and almost decreases linearly for the rest of the cluster-counts, the *elbow-point* and optimal number of clusters is `n=3`.
 
 ---
