@@ -106,7 +106,9 @@ def main():
     applyIsolationForest(mirna_data_frame)
 
     # Sort by percent changed and filter out the normal values
-    sorted_mirna_df = mirna_data_frame.sort_values(by='percent_change', key=abs, ascending=False)
+    sorted_mirna_df = mirna_data_frame.sort_values(by='percent_change', 
+                                                   key=abs, 
+                                                   ascending=False)
     anon_mirna_df = sorted_mirna_df[sorted_mirna_df['anomaly_score'] == -1]
     
     # Replace the index with the species name
