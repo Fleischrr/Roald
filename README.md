@@ -15,3 +15,4 @@ First measurement is a base-line sample from sedentary university students. The 
 - [Isolation Forest](documentation.md#Isolation-Forest)
     - [Output](documentation.md#Output)
     - [Evaluation](documentation.md#Evaluation)
+---
