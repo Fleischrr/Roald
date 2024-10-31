@@ -67,6 +67,35 @@ def replaceIndexWithName(sorted_mirna_df):
     
     return sorted_mirna_df.reset_index()
 
+def evaluateModel(mirna_df):
+    
+    # Set the contamination rate used in the Isolation Forest model
+    containment_rate = 0.05
+    
+    # Calculate the distribution of anomalies and normal data, between expected and actual
+    total_count = len(mirna_df)
+    expected_anomalies = total_count * containment_rate
+    anomaly_count = len(mirna_df[mirna_df['anomaly_score'] == -1])
+    normal_count = total_count - anomaly_count
+
+    print(f"\nTotal Data Points: {total_count}")
+    print(f"Number of Normal Points: {normal_count}")
+    print(f"Number of Anomalies: {anomaly_count}")
+    print(f"Percentage of Anomalies (Contamination): {anomaly_count / total_count * 100:.2f}%")
+    print(f"Expected Number of Anomalies: {expected_anomalies:.0f}")
+    print(f"Expected Contamination Rate: {containment_rate:.2%}")
+    
+    # Visualize the anomalies vs normal data using a scatter plot
+    mirna_df.reset_index(inplace=True)
+    plt.scatter(mirna_df.index, mirna_df['percent_change'], c=mirna_df['anomaly_score'],
+                cmap='coolwarm', label='Anomaly Score', alpha=0.6)
+    plt.xlabel('miRNA Index')
+    plt.ylabel('Percent Change')
+    plt.title('Isolation Forest Anomaly Detection')
+    plt.axhline(0, color='black', linestyle='--')
+    plt.colorbar(label='Anomaly Score (-1=Anomaly, 1=Normal)')
+    plt.show()
+
 
 def main():
     
@@ -83,6 +112,10 @@ def main():
     # Replace the index with the species name
     anon_mirna_df = replaceIndexWithName(anon_mirna_df)
     print(anon_mirna_df)
+
+    # Evaluate the model
+    evaluateModel(mirna_data_frame)
+    
 
 if __name__ == "__main__":
     main()
