@@ -1,3 +1,8 @@
+**Contents**:
+- [Data Preparation](#Data-Preparation)
+- [Elbow Method](#Elbow-Method)
+	- [Feature Engineering](#Feature-Engineering)
+---
 # Data Preparation
 `DataFrame` information before data preparation has been completed:
 \
@@ -63,5 +68,50 @@ mirna_df = pd.DataFrame(scaled_array, columns=mean_mirna_df.columns, index=mean_
 After the normalization, the final prepared `DataFrame` looks like this:
 \
 ![Final DataFrame Info](attachments/final_dataframe.png)
+
+---
+# Elbow Method
+Since we have chosen to use the `K-means` algorithm, we need to define the number of clusters we want to use. We do not know what the optimal number of clusters are in this scenario, so we need to calculate it. One of the ways to calculate the optimal number of clusters, is to use the `Elbow Method`.
+
+The `Elbow Method` analyzes *Within-Cluster Sum of Squares* (`WCSS`) through a number of clusters, to find the most optimal number. 
+
+---
+**Before we calculate the `WCSS` values, we initialize an empty list to store the calculated values and define a range of `n`-numbers we want to evaluate the `WCSS` value for:**
+```Python
+wcss = []
+range_clusters = range(1, 11)
+```
+
+To calculate the `WCSS` value for each number in the range defined, we need to fit the `K-means` model to our `DataFrame` and calculating the `WCSS` value for each count:
+```Python
+for n in range_clusters:
+	k_means = KMeans(n_clusters=n, init='k-means++', random_state=24)
+	k_means.fit(mirna_df)
+	wcss.append(k_means.inertia_)
+```
+
+After this we can plot the `Elbow Graph` and analyze it to find the most optimal number of clusters for our `K-mean` model. 
+
+**Attempt #1:**
+\
+![Elbow Attempt 1](attachments/elbow_attempt_1.png)
+\
+This is not the wanted output since there are no *elbow-point* on the `Elbow Graph`. We need to modify something if we want to continue using `K-means`. There are probably many possible reasons why this failed, but let's try to feature engineer this problem away.
+
+## Feature Engineering
+By utilizing the process of `Feature Engineering`, one can create new and informative features based on the existing dataset in possession. This can help to increase the variance to better the distance between groups or clusters. 
+
+In our context we want to find the `miRNA` species with the largest deregulation from `0y` to `0.5y`. So, we are basically interested in the difference in value from the start to the end. From this we can feature engineer up some new features that will help our model provide a valid performance. To hopefully improve the variance in our model and help us pick out a valid cluster-number from the `Elbow Graph`. **Let's try to add the *difference*, *ratio* and *percentage* change between the measurements to reinforce the change in value:**
+```Python
+mean_mirna_df['difference'] = mean_mirna_df['0.5_year'] - mean_mirna_df['0_year']
+mean_mirna_df['ratio'] = mean_mirna_df['0.5_year'] / mean_mirna_df['0_year']
+mean_mirna_df['percent_change'] = (mean_mirna_df['0.5_year'] - mean_mirna_df['0_year']) / mean_mirna_df['0_year'] * 100
+```
+
+**Attempt #2:**
+\
+![](attachments/elbow_attempt_2.png)
+\
+This is a much better looking `Elbow Graph` than we had in **Attempt #1**. Here we can clearly see an elbow-looking graph, with the *elbow-point* at `n=3`. Since after `n=3` the graph slows down and looses its curve and almost decreases linearly for the rest of the cluster-counts, the *elbow-point* and optimal number of cluesters is `n=3`.
 
 ---
