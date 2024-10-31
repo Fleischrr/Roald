@@ -11,3 +11,5 @@ First measurement is a base-line sample from sedentary university students. The 
 
 ## Documentation
 - [Data Preparation](documentation.md#data-preparation)
+- [Elbow Method](documentation.md#Elbow-Method)
+    - [Feature Engineering](documentation.md#Feature-Engineering)
