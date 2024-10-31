@@ -57,8 +57,7 @@ After combining the measurements into a single mean value for each row, we can t
 scaler = StandardScaler()
 scaled_array = scaler.fit_transform(mean_mirna_df)
 
-mirna_df = pd.DataFrame(scaled_array, columns=mean_mirna_df.columns,
-						index=mean_mirna_df.index)
+mirna_df = pd.DataFrame(scaled_array, columns=mean_mirna_df.columns, index=mean_mirna_df.index)
 ```
 
 After the normalization, the final prepared `DataFrame` looks like this:
